@@ -8,7 +8,7 @@ bundle, use the verify_certificate argument when instantiating the client.
 Usage:
 
 ```python
-from wazo-websocketd-client import Client
+from wazo_websocketd_client import Client
 
 c = Client('localhost', token=my-token)
 
