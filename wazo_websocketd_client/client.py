@@ -1,11 +1,13 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
+# Copyright 2018 The Wazo Authors  (see the AUTHORS file)
+# SPDX-License-Identifier: GPL-3.0+
 
 import websocket
 import json
 
 
-class Client:
+class websocketdClient:
     def __init__(self, host, token, events):
         self.host = host
         self.token = token

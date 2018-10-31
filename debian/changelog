@@ -1,0 +1,5 @@
+wazo-websocketd-client (0.1) wazo-dev; urgency=low
+
+  * Initial release.
+
+ -- Sylvain Boily <sylvain@wazo.io>  Wed, 31 Oct 2018 07:29:00 -0400
