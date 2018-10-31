@@ -10,7 +10,13 @@ Usage:
 ```python
 from wazo_websocketd_client import Client
 
-c = Client('localhost', token=my-token)
+events = [
+    'call_created',
+    'call_deleted'
+]
+
+
+c = Client(host, token, events)
 
 def callback(data):
     ...data
