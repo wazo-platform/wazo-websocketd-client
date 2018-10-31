@@ -30,7 +30,6 @@ Section: python
 Depends:
  ${python3:Depends},
  ${misc:Depends},
- xivo-lib-rest-client-python3,
  python-websocket
 Description: wazo-websocketd client library - Python 3
  Wazo is a system based on a powerful IPBX, to bring an easy to
