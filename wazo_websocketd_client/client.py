@@ -73,4 +73,4 @@ class websocketdClient:
             self.ws.on_open = self.on_open
             self.ws.run_forever(sslopt={"cert_reqs": False})
         except Exception as e:
-            print 'connection error to wazo', e
+            print 'Connection error to wazo', e

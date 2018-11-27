@@ -12,14 +12,17 @@ from wazo_websocketd_client import Client
 
 events = [
     'call_created',
-    'call_deleted'
+    'call_ended'
 ]
 
 
 c = Client(host, token, events)
 
 def callback(data):
-    ...data
+    print data
 
-c.on('call_created', callback) 
+c.on('call_created', callback)
+c.on('call_ended', callback)
+
+c.run()
 ```
