@@ -1,0 +1,5 @@
+wazo-websocketd-client (1.0) wazo-dev-stretch; urgency=medium
+
+  * Initial release.
+
+ -- Wazo Maintainers <dev@wazo.community>  Wed, 31 Oct 2018 07:29:00 -0400
