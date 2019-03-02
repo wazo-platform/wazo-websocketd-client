@@ -71,7 +71,7 @@ class websocketdClient:
         if msg.get('op') == 'start':
             self._is_running = True
 
-    def on_message(self, message):
+    def on_message(self, ws, message):
         msg = json.loads(message)
 
         if not self._is_running:
@@ -79,13 +79,13 @@ class websocketdClient:
         else:
             self.trigger_callback(msg['name'], msg['data'])
 
-    def on_error(self, error):
+    def on_error(self, ws, error):
         logger.warning('Error "%s"', error)
 
-    def on_close(self):
+    def on_close(self, ws):
         logger.debug('Stopping connection ...')
 
-    def on_open(self):
+    def on_open(self, ws):
         logger.debug('Starting connection ...')
 
     def url(self):
