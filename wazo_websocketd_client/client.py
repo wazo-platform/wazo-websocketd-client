@@ -101,14 +101,28 @@ class websocketdClient:
         return ["X-Auth-Token: {}".format(self._token_id)]
 
     def run(self):
+
+        # websocket-client doesn't play nice with methods
+        def on_open(ws):
+            self.on_open(ws)
+
+        def on_close(ws):
+            self.on_close(ws)
+
+        def on_message(ws, message):
+            self.on_message(ws, message)
+
+        def on_error(ws, error):
+            self.on_error(ws, error)
+
         try:
             self._ws_app = websocket.WebSocketApp(
                 self.url(),
                 header=self.headers(),
-                on_message=self.on_message,
-                on_open=self.on_open,
-                on_error=self.on_error,
-                on_close=self.on_close,
+                on_message=on_message,
+                on_open=on_open,
+                on_error=on_error,
+                on_close=on_close,
             )
 
             kwargs = {}
