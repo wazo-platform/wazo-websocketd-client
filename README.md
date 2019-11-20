@@ -1,6 +1,6 @@
 # wazo-websocketd-client
 
-A python library to connect to xivo-websocketd.
+A python library to connect to wazo-websocketd.
 
 
 Usage:
