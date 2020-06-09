@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright 2018-2019 The Wazo Authors  (see the AUTHORS file)
+# Copyright 2018-2020 The Wazo Authors  (see the AUTHORS file)
 # SPDX-License-Identifier: GPL-3.0-or-later
 
 import logging
@@ -77,7 +77,8 @@ class websocketdClient:
         if not self._is_running:
             self.init(msg)
         else:
-            self.trigger_callback(msg['name'], msg['data'])
+            if msg.get('op') == 'event':
+                self.trigger_callback(msg['data']['name'], msg['data'])
 
     def on_error(self, ws, error):
         logger.warning('Error "%s"', error)
@@ -95,7 +96,7 @@ class websocketdClient:
             port=':{}'.format(self._port) if self._port else '',
             prefix=self._prefix,
         )
-        return '{}/'.format(base)
+        return '{}/?version=2'.format(base)
 
     def headers(self):
         return ["X-Auth-Token: {}".format(self._token_id)]
