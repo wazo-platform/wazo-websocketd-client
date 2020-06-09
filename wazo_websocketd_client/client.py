@@ -71,6 +71,14 @@ class websocketdClient:
         if msg.get('op') == 'start':
             self._is_running = True
 
+    def ping(self, payload):
+        self._ws_app.send(json.dumps({
+            'op': 'ping',
+            'data': {
+                'payload': payload
+            }
+        }))
+
     def on_message(self, ws, message):
         msg = json.loads(message)
 
