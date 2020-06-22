@@ -6,7 +6,7 @@ import logging
 import json
 import websocket
 
-from .exceptions import AlreadyConnectedException
+from .exceptions import AlreadyConnectedException, NotRunningException
 
 logger = logging.getLogger(__name__)
 
@@ -72,6 +72,9 @@ class websocketdClient:
             self._is_running = True
 
     def ping(self, payload):
+        if not self._ws_app:
+            raise NotRunningException()
+
         self._ws_app.send(json.dumps({
             'op': 'ping',
             'data': {
