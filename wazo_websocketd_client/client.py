@@ -100,6 +100,14 @@ class websocketdClient:
     def on_open(self, ws):
         logger.debug('Starting connection ...')
 
+    def update_token(self, token):
+        self._ws_app.send(json.dumps({
+            'op': 'token',
+            'data': {
+                'token': token
+            }
+        }))
+
     def url(self):
         base = self._url_fmt.format(
             scheme='wss' if self._wss else 'ws',
