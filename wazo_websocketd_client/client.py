@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright 2018-2020 The Wazo Authors  (see the AUTHORS file)
+# Copyright 2018-2022 The Wazo Authors  (see the AUTHORS file)
 # SPDX-License-Identifier: GPL-3.0-or-later
 
 import logging
@@ -94,8 +94,20 @@ class websocketdClient:
     def on_error(self, ws, error):
         logger.warning('Error "%s"', error)
 
-    def on_close(self, ws):
-        logger.debug('Stopping connection ...')
+    def on_close(self, ws, close_status_code, close_reason):
+        if close_status_code and close_reason:
+            logger.debug(
+                'WS closed with code %s, reason: %s.',
+                close_status_code,
+                close_reason if close_reason else 'unknown',
+            )
+        elif close_status_code:
+            logger.debug(
+                'WS closed with code %s.',
+                close_status_code,
+            )
+        else:
+            logger.debug('WS closed.')
 
     def on_open(self, ws):
         logger.debug('Starting connection ...')
@@ -121,13 +133,12 @@ class websocketdClient:
         return ["X-Auth-Token: {}".format(self._token_id)]
 
     def run(self):
-
         # websocket-client doesn't play nice with methods
         def on_open(ws):
             self.on_open(ws)
 
-        def on_close(ws):
-            self.on_close(ws)
+        def on_close(ws, close_status_code, close_reason):
+            self.on_close(ws, close_status_code, close_reason)
 
         def on_message(ws, message):
             self.on_message(ws, message)
