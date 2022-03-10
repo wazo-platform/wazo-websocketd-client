@@ -92,7 +92,7 @@ class websocketdClient:
                 self.trigger_callback(msg['data']['name'], msg['data'])
 
     def on_error(self, ws, error):
-        logger.warning('Error "%s"', error)
+        logger.error('WS encountered an error: %s: %s', type(error).__name__, error)
         if isinstance(error, KeyboardInterrupt):
             raise error
 
@@ -165,4 +165,4 @@ class websocketdClient:
             self._ws_app.run_forever(**kwargs)
 
         except Exception as e:
-            logger.warning('Websocketd connection error %s', e)
+            logger.error('Websocketd connection error: %s: %s', type(e).__name__, e)
