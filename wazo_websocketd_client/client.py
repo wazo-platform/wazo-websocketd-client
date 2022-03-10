@@ -15,15 +15,17 @@ class websocketdClient:
 
     _url_fmt = '{scheme}://{host}{port}{prefix}'
 
-    def __init__(self,
-                 host,
-                 port='',
-                 prefix='/api/websocketd',
-                 token=None,
-                 verify_certificate=True,
-                 wss=True,
-                 debug=False,
-                 **kwargs):
+    def __init__(
+        self,
+        host,
+        port='',
+        prefix='/api/websocketd',
+        token=None,
+        verify_certificate=True,
+        wss=True,
+        debug=False,
+        **kwargs
+    ):
         self.host = host
         self._port = port
         self._prefix = prefix
@@ -44,12 +46,9 @@ class websocketdClient:
         self._token_id = token
 
     def subscribe(self, event_name):
-        self._ws_app.send(json.dumps({
-            'op': 'subscribe',
-            'data': {
-                'event_name': event_name
-            }
-        }))
+        self._ws_app.send(
+            json.dumps({'op': 'subscribe', 'data': {'event_name': event_name}})
+        )
 
     def on(self, event, callback):
         self._callbacks[event] = callback
@@ -75,12 +74,7 @@ class websocketdClient:
         if not self._ws_app:
             raise NotRunningException()
 
-        self._ws_app.send(json.dumps({
-            'op': 'ping',
-            'data': {
-                'payload': payload
-            }
-        }))
+        self._ws_app.send(json.dumps({'op': 'ping', 'data': {'payload': payload}}))
 
     def on_message(self, ws, message):
         msg = json.loads(message)
@@ -116,12 +110,7 @@ class websocketdClient:
         logger.debug('Starting connection ...')
 
     def update_token(self, token):
-        self._ws_app.send(json.dumps({
-            'op': 'token',
-            'data': {
-                'token': token
-            }
-        }))
+        self._ws_app.send(json.dumps({'op': 'token', 'data': {'token': token}}))
 
     def url(self):
         base = self._url_fmt.format(
