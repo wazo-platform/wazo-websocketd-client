@@ -108,6 +108,7 @@ class websocketdClient:
             )
         else:
             logger.debug('WS closed.')
+        self._is_running = False
 
     def on_open(self, ws):
         logger.debug('Starting connection ...')
