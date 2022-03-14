@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright 2018-2020 The Wazo Authors  (see the AUTHORS file)
+# Copyright 2018-2022 The Wazo Authors  (see the AUTHORS file)
 # SPDX-License-Identifier: GPL-3.0-or-later
 
 import logging
@@ -15,15 +15,17 @@ class websocketdClient:
 
     _url_fmt = '{scheme}://{host}{port}{prefix}'
 
-    def __init__(self,
-                 host,
-                 port='',
-                 prefix='/api/websocketd',
-                 token=None,
-                 verify_certificate=True,
-                 wss=True,
-                 debug=False,
-                 **kwargs):
+    def __init__(
+        self,
+        host,
+        port='',
+        prefix='/api/websocketd',
+        token=None,
+        verify_certificate=True,
+        wss=True,
+        debug=False,
+        **kwargs
+    ):
         self.host = host
         self._port = port
         self._prefix = prefix
@@ -44,12 +46,9 @@ class websocketdClient:
         self._token_id = token
 
     def subscribe(self, event_name):
-        self._ws_app.send(json.dumps({
-            'op': 'subscribe',
-            'data': {
-                'event_name': event_name
-            }
-        }))
+        self._ws_app.send(
+            json.dumps({'op': 'subscribe', 'data': {'event_name': event_name}})
+        )
 
     def on(self, event, callback):
         self._callbacks[event] = callback
@@ -75,12 +74,7 @@ class websocketdClient:
         if not self._ws_app:
             raise NotRunningException()
 
-        self._ws_app.send(json.dumps({
-            'op': 'ping',
-            'data': {
-                'payload': payload
-            }
-        }))
+        self._ws_app.send(json.dumps({'op': 'ping', 'data': {'payload': payload}}))
 
     def on_message(self, ws, message):
         msg = json.loads(message)
@@ -92,21 +86,31 @@ class websocketdClient:
                 self.trigger_callback(msg['data']['name'], msg['data'])
 
     def on_error(self, ws, error):
-        logger.warning('Error "%s"', error)
+        logger.error('WS encountered an error: %s: %s', type(error).__name__, error)
+        if isinstance(error, KeyboardInterrupt):
+            raise error
 
-    def on_close(self, ws):
-        logger.debug('Stopping connection ...')
+    def on_close(self, ws, close_status_code, close_reason):
+        if close_status_code and close_reason:
+            logger.debug(
+                'WS closed with code %s, reason: %s.',
+                close_status_code,
+                close_reason if close_reason else 'unknown',
+            )
+        elif close_status_code:
+            logger.debug(
+                'WS closed with code %s.',
+                close_status_code,
+            )
+        else:
+            logger.debug('WS closed.')
+        self._is_running = False
 
     def on_open(self, ws):
         logger.debug('Starting connection ...')
 
     def update_token(self, token):
-        self._ws_app.send(json.dumps({
-            'op': 'token',
-            'data': {
-                'token': token
-            }
-        }))
+        self._ws_app.send(json.dumps({'op': 'token', 'data': {'token': token}}))
 
     def url(self):
         base = self._url_fmt.format(
@@ -121,13 +125,12 @@ class websocketdClient:
         return ["X-Auth-Token: {}".format(self._token_id)]
 
     def run(self):
-
         # websocket-client doesn't play nice with methods
         def on_open(ws):
             self.on_open(ws)
 
-        def on_close(ws):
-            self.on_close(ws)
+        def on_close(ws, close_status_code, close_reason):
+            self.on_close(ws, close_status_code, close_reason)
 
         def on_message(ws, message):
             self.on_message(ws, message)
@@ -151,4 +154,4 @@ class websocketdClient:
             self._ws_app.run_forever(**kwargs)
 
         except Exception as e:
-            logger.warning('Websocketd connection error %s', e)
+            logger.error('Websocketd connection error: %s: %s', type(e).__name__, e)
