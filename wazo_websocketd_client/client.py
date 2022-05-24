@@ -54,7 +54,9 @@ class websocketdClient:
         self._callbacks[event] = callback
 
     def trigger_callback(self, event, data):
-        if self._callbacks.get(event):
+        if '*' in self._callbacks:
+            self._callbacks['*'](data)
+        elif self._callbacks.get(event):
             self._callbacks[event](data)
 
     def _start(self):
