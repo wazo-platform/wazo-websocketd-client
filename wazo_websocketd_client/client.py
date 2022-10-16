@@ -70,11 +70,11 @@ class websocketdClient:
         if msg.get('op') == 'start':
             self._is_running = True
 
-    def ping(self, payload):
+    async def ping(self, payload):
         if not self._ws_app:
             raise NotRunningException()
 
-        self._ws_app.send(json.dumps({'op': 'ping', 'data': {'payload': payload}}))
+        await self._ws_app.send(json.dumps({'op': 'ping', 'data': {'payload': payload}}))
 
     async def on_message(self, ws, message):
         msg = json.loads(message)
@@ -109,8 +109,8 @@ class websocketdClient:
     def on_open(self, ws):
         logger.debug('Starting connection ...')
 
-    def update_token(self, token):
-        self._ws_app.send(json.dumps({'op': 'token', 'data': {'token': token}}))
+    async def update_token(self, token):
+        await self._ws_app.send(json.dumps({'op': 'token', 'data': {'token': token}}))
 
     def url(self):
         base = self._url_fmt.format(
@@ -146,4 +146,4 @@ class websocketdClient:
                 await self.on_message(self._ws_app, msg)
 
         except Exception as e:
-            logger.exception('Websocketd connection error: %s: %s', type(e).__name__, e)
+            logger.error('Websocketd connection error: %s: %s', type(e).__name__, e)
