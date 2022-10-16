@@ -10,7 +10,7 @@ import asyncio
 from wazo_websocketd_client import Client
 
 
-def callback(data):
+async def callback(data):
     print(data)
 
 async def main():
