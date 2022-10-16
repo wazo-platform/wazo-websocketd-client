@@ -1,0 +1,5 @@
+git+https://github.com/wazo-platform/wazo-auth-client.git
+git+https://github.com/wazo-platform/xivo-lib-python.git
+git+https://github.com/wazo-platform/wazo-lib-rest-client.git
+git+https://github.com/wazo-platform/wazo-websocketd-client.git@asyncio_client
+websockets==8.1
