@@ -16,7 +16,7 @@ Section: python
 Depends:
  ${python3:Depends},
  ${misc:Depends},
- python3-websocket
+ python3-websockets
 Description: wazo-websocketd client library - Python 3
  Wazo is a system based on a powerful IPBX, to bring an easy to
  install solution for telephony and related services.
