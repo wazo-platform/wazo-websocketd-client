@@ -4,11 +4,11 @@ Priority: optional
 Maintainer: Wazo Maintainers <dev@wazo.community>
 Build-Depends:
  debhelper (>= 10),
- dh-python3,
+ dh-python,
  python3-all,
  python3-setuptools
 Standards-Version: 4.2.1
-X-Python3-Version: >= 3.9
+X-Python3-Version: >= 3.7
 
 Package: wazo-websocketd-client-python3
 Architecture: all
@@ -20,3 +20,4 @@ Depends:
 Description: wazo-websocketd client library - Python 3
  Wazo is a system based on a powerful IPBX, to bring an easy to
  install solution for telephony and related services.
+ .
