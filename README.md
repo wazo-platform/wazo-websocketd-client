@@ -1,20 +1,23 @@
 # wazo-websocketd-client
 
-A python library to connect to wazo-websocketd.
+An asyncio python3 library to connect to wazo-websocketd.
 
 
 Usage:
 
 ```python
+import asyncio
 from wazo_websocketd_client import Client
 
-c = Client(host, token=token, verify_certificate=False)
 
 def callback(data):
     print(data)
 
-c.on('call_created', callback)
-c.on('call_ended', callback)
+async def main():
+    c = Client(host, token=token, verify_certificate=False)
+    c.on('call_created', callback)
+    c.on('call_ended', callback)
+    await c.run()
 
-c.run()
+asyncio.run(main())
 ```
