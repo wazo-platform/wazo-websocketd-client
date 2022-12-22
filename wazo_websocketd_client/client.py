@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright 2018-2022 The Wazo Authors  (see the AUTHORS file)
 # SPDX-License-Identifier: GPL-3.0-or-later
 
@@ -24,7 +23,7 @@ class websocketdClient:
         verify_certificate=True,
         wss=True,
         debug=False,
-        **kwargs
+        **kwargs,
     ):
         self.host = host
         self._port = port
@@ -118,13 +117,13 @@ class websocketdClient:
         base = self._url_fmt.format(
             scheme='wss' if self._wss else 'ws',
             host=self.host,
-            port=':{}'.format(self._port) if self._port else '',
+            port=f':{self._port}' if self._port else '',
             prefix=self._prefix,
         )
-        return '{}/?version=2'.format(base)
+        return f'{base}/?version=2'
 
     def headers(self):
-        return ["X-Auth-Token: {}".format(self._token_id)]
+        return [f"X-Auth-Token: {self._token_id}"]
 
     def run(self):
         # websocket-client doesn't play nice with methods
