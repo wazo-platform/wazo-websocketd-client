@@ -160,6 +160,7 @@ class WebsocketdClient:
     def stop(self) -> None:
         if self._ws_app is not None:
             self._ws_app.close()
+            self._is_running = False
         while self._is_running is True:
             logger.debug('Waiting for websocketd-client to exit')
             time.sleep(1)
