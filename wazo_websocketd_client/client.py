@@ -39,7 +39,7 @@ class WebsocketdClient:
         if debug:
             enableTrace(debug)
 
-        self._ws_app: WebSocketApp = None  # type: ignore[assignment]
+        self._ws_app: WebSocketApp | None = None
         self._is_running = False
         self._callbacks: dict[str, Callable[[dict[str, Any]], None]] = {}
 
@@ -104,7 +104,7 @@ class WebsocketdClient:
     def on_open(self, ws: WebSocketApp) -> None:
         logger.debug('Starting connection ...')
 
-    def update_token(self, token):
+    def update_token(self, token: str) -> None:
         self._send_op('token', {'token': token})
 
     @cached_property
@@ -127,16 +127,16 @@ class WebsocketdClient:
 
     def run(self) -> None:
         # websocket-client doesn't play nice with methods
-        def on_open(ws: WebSocketApp):
+        def on_open(ws: WebSocketApp) -> None:
             self.on_open(ws)
 
-        def on_close(ws: WebSocketApp):
+        def on_close(ws: WebSocketApp) -> None:
             self.on_close(ws)
 
-        def on_message(ws: WebSocketApp, message):
+        def on_message(ws: WebSocketApp, message: str) -> None:
             self.on_message(ws, message)
 
-        def on_error(ws: WebSocketApp, error: BaseException):
+        def on_error(ws: WebSocketApp, error: BaseException) -> None:
             self.on_error(ws, error)
 
         try:
@@ -149,7 +149,7 @@ class WebsocketdClient:
                 on_close=on_close,
             )
 
-            kwargs = {}
+            kwargs: dict[str, Any] = {}
             if not self._verify_certificate:
                 kwargs['sslopt'] = {'cert_reqs': False}
             self._ws_app.run_forever(**kwargs)
