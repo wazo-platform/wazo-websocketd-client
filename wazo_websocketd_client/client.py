@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import logging
 import time
+from functools import cached_property
 from typing import Any, Callable
 
 from websocket import WebSocketApp, enableTrace
@@ -104,7 +105,8 @@ class WebsocketdClient:
     def update_token(self, token):
         self._ws_app.send(json.dumps({'op': 'token', 'data': {'token': token}}))
 
-    def url(self):
+    @cached_property
+    def url(self) -> str:
         base = self._url_fmt.format(
             scheme='wss' if self._wss else 'ws',
             host=self.host,
@@ -113,10 +115,15 @@ class WebsocketdClient:
         )
         return f'{base}/?version=2'
 
-    def headers(self):
+    @property
+    def headers(self) -> list[str]:
         return [f"X-Auth-Token: {self._token_id}"]
 
-    def run(self):
+    @property
+    def is_running(self) -> bool:
+        return self._is_running
+
+    def run(self) -> None:
         # websocket-client doesn't play nice with methods
         def on_open(ws: WebSocketApp):
             self.on_open(ws)
@@ -132,8 +139,8 @@ class WebsocketdClient:
 
         try:
             self._ws_app = WebSocketApp(
-                self.url(),
-                header=self.headers(),
+                self.url,
+                header=self.headers,
                 on_message=on_message,
                 on_open=on_open,
                 on_error=on_error,
