@@ -49,9 +49,7 @@ class WebsocketdClient:
         self._token_id = token
 
     def subscribe(self, event_name: str) -> None:
-        self._ws_app.send(
-            json.dumps({'op': 'subscribe', 'data': {'event_name': event_name}})
-        )
+        self._send_op('subscribe', {'event_name': event_name})
 
     def on(self, event: str, callback: Callable[[dict[str, Any]], None]) -> None:
         self._callbacks[event] = callback
@@ -63,8 +61,7 @@ class WebsocketdClient:
             self._callbacks[event](data)
 
     def _start(self) -> None:
-        msg = {'op': 'start'}
-        self._ws_app.send(json.dumps(msg))
+        self._send_op('start')
 
     def init(self, msg: dict[str, Any]) -> None:
         if msg.get('op') == 'init':
@@ -75,11 +72,16 @@ class WebsocketdClient:
         if msg.get('op') == 'start':
             self._is_running = True
 
-    def ping(self, payload: str) -> None:
-        if not self._ws_app:
+    def _send_op(self, op: str, data: dict[str, Any] | None = None) -> None:
+        if self._ws_app is None:
             raise NotRunningException()
+        payload: dict[str, str | dict] = {'op': op}
+        if data is not None:
+            payload['data'] = data
+        self._ws_app.send(json.dumps(payload))
 
-        self._ws_app.send(json.dumps({'op': 'ping', 'data': {'payload': payload}}))
+    def ping(self, payload: str) -> None:
+        self._send_op('ping', {'payload': payload})
 
     def on_message(self, ws: WebSocketApp, message: str) -> None:
         msg = json.loads(message)
@@ -103,7 +105,7 @@ class WebsocketdClient:
         logger.debug('Starting connection ...')
 
     def update_token(self, token):
-        self._ws_app.send(json.dumps({'op': 'token', 'data': {'token': token}}))
+        self._send_op('token', {'token': token})
 
     @cached_property
     def url(self) -> str:
@@ -156,7 +158,8 @@ class WebsocketdClient:
             logger.error('Websocketd connection error: %s: %s', type(e).__name__, e)
 
     def stop(self) -> None:
-        self._ws_app.close()
+        if self._ws_app is not None:
+            self._ws_app.close()
         while self._is_running is True:
             logger.debug('Waiting for websocketd-client to exit')
             time.sleep(1)
