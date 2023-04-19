@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import logging
 import time
+from typing import Any, Callable
 
 from websocket import WebSocketApp, enableTrace
 
@@ -18,14 +19,14 @@ class WebsocketdClient:
 
     def __init__(
         self,
-        host,
-        port='',
-        prefix='/api/websocketd',
-        token=None,
-        verify_certificate=True,
-        wss=True,
-        debug=False,
-        **kwargs,
+        host: str,
+        port: str = '',
+        prefix: str = '/api/websocketd',
+        token: str | None = None,
+        verify_certificate: bool = True,
+        wss: bool = True,
+        debug: bool = False,
+        **kwargs: Any,
     ):
         self.host = host
         self._port = port
@@ -39,47 +40,47 @@ class WebsocketdClient:
 
         self._ws_app: WebSocketApp = None  # type: ignore[assignment]
         self._is_running = False
-        self._callbacks = {}
+        self._callbacks: dict[str, Callable[[dict[str, Any]], None]] = {}
 
-    def set_token(self, token):
+    def set_token(self, token: str) -> None:
         if self._is_running:
             raise AlreadyConnectedException()
         self._token_id = token
 
-    def subscribe(self, event_name):
+    def subscribe(self, event_name: str) -> None:
         self._ws_app.send(
             json.dumps({'op': 'subscribe', 'data': {'event_name': event_name}})
         )
 
-    def on(self, event, callback):
+    def on(self, event: str, callback: Callable[[dict[str, Any]], None]) -> None:
         self._callbacks[event] = callback
 
-    def trigger_callback(self, event, data):
+    def trigger_callback(self, event: str, data: dict[str, Any]) -> None:
         if '*' in self._callbacks:
             self._callbacks['*'](data)
         elif self._callbacks.get(event):
             self._callbacks[event](data)
 
-    def _start(self):
+    def _start(self) -> None:
         msg = {'op': 'start'}
         self._ws_app.send(json.dumps(msg))
 
-    def init(self, msg):
+    def init(self, msg: dict[str, Any]) -> None:
         if msg.get('op') == 'init':
-            for event in self._callbacks.keys():
+            for event in self._callbacks:
                 self.subscribe(event)
             self._start()
 
         if msg.get('op') == 'start':
             self._is_running = True
 
-    def ping(self, payload):
+    def ping(self, payload: str) -> None:
         if not self._ws_app:
             raise NotRunningException()
 
         self._ws_app.send(json.dumps({'op': 'ping', 'data': {'payload': payload}}))
 
-    def on_message(self, ws, message):
+    def on_message(self, ws: WebSocketApp, message: str) -> None:
         msg = json.loads(message)
 
         if not self._is_running:
@@ -88,7 +89,7 @@ class WebsocketdClient:
             if msg.get('op') == 'event':
                 self.trigger_callback(msg['data']['name'], msg['data'])
 
-    def on_error(self, ws, error):
+    def on_error(self, ws: WebSocketApp, error: BaseException) -> None:
         logger.error('WS encountered an error: %s: %s', type(error).__name__, error)
         if isinstance(error, KeyboardInterrupt):
             raise error
@@ -97,7 +98,7 @@ class WebsocketdClient:
         logger.debug('WS closed.')
         self._is_running = False
 
-    def on_open(self, ws):
+    def on_open(self, ws: WebSocketApp) -> None:
         logger.debug('Starting connection ...')
 
     def update_token(self, token):
@@ -117,16 +118,16 @@ class WebsocketdClient:
 
     def run(self):
         # websocket-client doesn't play nice with methods
-        def on_open(ws):
+        def on_open(ws: WebSocketApp):
             self.on_open(ws)
 
         def on_close(ws: WebSocketApp):
             self.on_close(ws)
 
-        def on_message(ws, message):
+        def on_message(ws: WebSocketApp, message):
             self.on_message(ws, message)
 
-        def on_error(ws, error):
+        def on_error(ws: WebSocketApp, error: BaseException):
             self.on_error(ws, error)
 
         try:
