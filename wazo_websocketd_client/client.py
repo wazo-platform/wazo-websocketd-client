@@ -1,17 +1,19 @@
 # Copyright 2018-2023 The Wazo Authors  (see the AUTHORS file)
 # SPDX-License-Identifier: GPL-3.0-or-later
+from __future__ import annotations
 
 import json
 import logging
+import time
 
-import websocket
+from websocket import WebSocketApp, enableTrace
 
 from .exceptions import AlreadyConnectedException, NotRunningException
 
 logger = logging.getLogger(__name__)
 
 
-class websocketdClient:
+class WebsocketdClient:
     _url_fmt = '{scheme}://{host}{port}{prefix}'
 
     def __init__(
@@ -33,9 +35,9 @@ class websocketdClient:
         self._verify_certificate = verify_certificate
 
         if debug:
-            websocket.enableTrace(debug)
+            enableTrace(debug)
 
-        self._ws_app = None
+        self._ws_app: WebSocketApp = None  # type: ignore[assignment]
         self._is_running = False
         self._callbacks = {}
 
@@ -91,20 +93,8 @@ class websocketdClient:
         if isinstance(error, KeyboardInterrupt):
             raise error
 
-    def on_close(self, ws, close_status_code, close_reason):
-        if close_status_code and close_reason:
-            logger.debug(
-                'WS closed with code %s, reason: %s.',
-                close_status_code,
-                close_reason if close_reason else 'unknown',
-            )
-        elif close_status_code:
-            logger.debug(
-                'WS closed with code %s.',
-                close_status_code,
-            )
-        else:
-            logger.debug('WS closed.')
+    def on_close(self, ws: WebSocketApp) -> None:
+        logger.debug('WS closed.')
         self._is_running = False
 
     def on_open(self, ws):
@@ -130,8 +120,8 @@ class websocketdClient:
         def on_open(ws):
             self.on_open(ws)
 
-        def on_close(ws, close_status_code, close_reason):
-            self.on_close(ws, close_status_code, close_reason)
+        def on_close(ws: WebSocketApp):
+            self.on_close(ws)
 
         def on_message(ws, message):
             self.on_message(ws, message)
@@ -140,7 +130,7 @@ class websocketdClient:
             self.on_error(ws, error)
 
         try:
-            self._ws_app = websocket.WebSocketApp(
+            self._ws_app = WebSocketApp(
                 self.url(),
                 header=self.headers(),
                 on_message=on_message,
@@ -156,3 +146,11 @@ class websocketdClient:
 
         except Exception as e:
             logger.error('Websocketd connection error: %s: %s', type(e).__name__, e)
+
+    def stop(self) -> None:
+        self._ws_app.close()
+        while self._is_running is True:
+            logger.debug('Waiting for websocketd-client to exit')
+            time.sleep(1)
+        self._callbacks.clear()
+        self._ws_app = None
