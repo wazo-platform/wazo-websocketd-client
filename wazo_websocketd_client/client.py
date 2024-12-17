@@ -86,6 +86,7 @@ class WebsocketdClient:
 
     def on_message(self, ws: WebSocketApp, message: str) -> None:
         msg = json.loads(message)
+        logger.debug(f'Received event: ${msg}')
 
         if not self._is_running:
             self.init(msg)
