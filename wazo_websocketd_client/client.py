@@ -1,4 +1,4 @@
-# Copyright 2018-2024 The Wazo Authors  (see the AUTHORS file)
+# Copyright 2018-2025 The Wazo Authors  (see the AUTHORS file)
 # SPDX-License-Identifier: GPL-3.0-or-later
 
 from __future__ import annotations
@@ -10,6 +10,8 @@ from functools import cached_property
 from typing import Any, Callable
 
 from websocket import WebSocketApp, enableTrace
+from websocket._app import Dispatcher, SSLDispatcher
+from websocket._url import parse_url
 
 from .exceptions import AlreadyConnectedException, NotRunningException
 
@@ -154,10 +156,25 @@ class WebsocketdClient:
             kwargs: dict[str, Any] = {}
             if not self._verify_certificate:
                 kwargs['sslopt'] = {'cert_reqs': False}
+
+            # NOTE: Backport fix from websocket-client 1.4.0
+            is_ssl = parse_url(self.url)[3]
+            kwargs['dispatcher'] = self._create_dispatcher(is_ssl)
+
             self._ws_app.run_forever(**kwargs)
 
         except Exception as e:
             logger.error('Websocketd connection error: %s: %s', type(e).__name__, e)
+
+    def _create_dispatcher(self, is_ssl: bool) -> object:
+        # This is a re-implementation of the upstream function, by changing the "is_ssl" to rely on
+        # url instead of the "sock" object to avoid race condition when closing websocket where the
+        # "sock" value can be None
+        timeout = 10
+        if is_ssl:
+            return SSLDispatcher(self._ws_app, timeout)
+
+        return Dispatcher(self, timeout)
 
     def stop(self) -> None:
         if self._ws_app is not None:
