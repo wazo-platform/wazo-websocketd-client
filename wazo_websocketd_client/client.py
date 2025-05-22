@@ -10,8 +10,6 @@ from functools import cached_property
 from typing import Any, Callable
 
 from websocket import WebSocketApp, enableTrace
-from websocket._app import Dispatcher, SSLDispatcher
-from websocket._url import parse_url
 
 from .exceptions import AlreadyConnectedException, NotRunningException
 
@@ -101,7 +99,7 @@ class WebsocketdClient:
         if isinstance(error, KeyboardInterrupt):
             raise error
 
-    def on_close(self, ws: WebSocketApp) -> None:
+    def on_close(self, ws: WebSocketApp, status_code: int, message: str) -> None:
         logger.debug('WS closed.')
         self._is_running = False
 
@@ -134,8 +132,8 @@ class WebsocketdClient:
         def on_open(ws: WebSocketApp) -> None:
             self.on_open(ws)
 
-        def on_close(ws: WebSocketApp) -> None:
-            self.on_close(ws)
+        def on_close(ws: WebSocketApp, status_code: int, message: str) -> None:
+            self.on_close(ws, status_code, message)
 
         def on_message(ws: WebSocketApp, message: str) -> None:
             self.on_message(ws, message)
@@ -157,24 +155,10 @@ class WebsocketdClient:
             if not self._verify_certificate:
                 kwargs['sslopt'] = {'cert_reqs': False}
 
-            # NOTE: Backport fix from websocket-client 1.4.0
-            is_ssl = parse_url(self.url)[3]
-            kwargs['dispatcher'] = self._create_dispatcher(is_ssl)
-
             self._ws_app.run_forever(**kwargs)
 
         except Exception as e:
             logger.error('Websocketd connection error: %s: %s', type(e).__name__, e)
-
-    def _create_dispatcher(self, is_ssl: bool) -> object:
-        # This is a re-implementation of the upstream function, by changing the "is_ssl" to rely on
-        # url instead of the "sock" object to avoid race condition when closing websocket where the
-        # "sock" value can be None
-        timeout = 10
-        if is_ssl:
-            return SSLDispatcher(self._ws_app, timeout)
-
-        return Dispatcher(self, timeout)
 
     def stop(self) -> None:
         if self._ws_app is not None:
@@ -182,6 +166,6 @@ class WebsocketdClient:
             self._is_running = False
         while self._is_running is True:
             logger.debug('Waiting for websocketd-client to exit')
-            time.sleep(1)
+            time.sleep(0.1)
         self._callbacks.clear()
         self._ws_app = None
